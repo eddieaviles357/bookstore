@@ -31,10 +31,12 @@ router.get("/:id", async function (req, res, next) {
 
 router.post("/", async function (req, res, next) {
   try {
+    // is the body valid?
     const validatedSchema = jsonSchema.validate(req.body, bookSchema);
     if(!validatedSchema.valid) {
       return res.status(400).json({ errors: validatedSchema.errors.map(errors => errors.stack) });
     }
+    // create a new book
     const book = await Book.create(req.body.book);
     return res.status(201).json({ book });
   } catch (err) {
