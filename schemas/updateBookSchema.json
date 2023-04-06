@@ -20,6 +20,7 @@
           "title",
           "year"
         ],
+        "additionalProperties": false,
         "properties": {
           "amazon_url": {
             "$id": "#/properties/book/properties/amazon_url",
