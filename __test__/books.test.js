@@ -13,6 +13,16 @@ describe('Book routes', () => {
     let publisher;
     let title;
     let year;
+    const testBook = {            
+        "isbn" : "123674081",
+        "amazon_url" : "http://a.co/eobPtX23",
+        "author" : "Eduardo Aviles",
+        "language" : "spanish",
+        "pages" : 930,
+        "publisher" : "National",
+        "title" : "Programacion",
+        "year" : 2023,
+    }
     beforeEach(async () => {
         await db.query('DELETE from books');
         const bookResult = await db.query(`
@@ -49,16 +59,7 @@ describe('Book routes', () => {
             const res = await request(app).get('/books');
             const { body } = res;
             expect(res.status).toBe(200);
-            expect(body).toHaveProperty('books', [{
-                isbn,
-                amazon_url,
-                author,
-                language,
-                pages,
-                publisher,
-                title,
-                year
-            }]);
+            expect(body).toHaveProperty('books', [ { isbn, amazon_url, author, language, pages, publisher, title, year } ] );
         })
     });
 
@@ -67,16 +68,7 @@ describe('Book routes', () => {
             const res = await request(app).get(`/books/${isbn}`);
             const { body } = res;
             expect(res.status).toBe(200);
-            expect(body).toHaveProperty('book', {
-                isbn,
-                amazon_url,
-                author,
-                language,
-                pages,
-                publisher,
-                title,
-                year
-            });
+            expect(body).toHaveProperty('book', { isbn, amazon_url, author, language, pages, publisher, title, year } );
         });
 
         test('should return 404 if book does not exist', async () => {
@@ -87,9 +79,58 @@ describe('Book routes', () => {
     });
 
     describe('POST /books', () => {
+        test('should create a new book', async () => {
 
+            isbn = "123674081";
+            amazon_url = "http://a.co/eobPtX23";
+            author = "Eduardo Aviles";
+            language = "spanish";
+            pages = 930;
+            publisher = "National";
+            title = "Programacion";
+            year = 2023;
+
+            const res = await request(app).post('/books').send( { "book": testBook });
+            expect(res.status).toBe(201);
+            expect(res.body).toHaveProperty('book', { isbn, amazon_url, author, language, pages, publisher, title, year } );
+        });
+
+        test('should return 400 if isbn is missing', async () => {
+            const res = await request(app).post('/books').send( { "book" : { amazon_url, author, language, pages, publisher, title, year } });
+            expect(res.status).toBe(400);
+            expect(res.body).toHaveProperty('errors');
+        });
     });
     
+
+    describe('PUT /books/:id', () => {
+        test('should update a book', async () => {
+            delete testBook.isbn;
+            const res = await request(app).put(`/books/${isbn}`).send( { "book": testBook });
+            expect(res.status).toBe(200);
+            testBook.isbn = isbn;
+            expect(res.body).toHaveProperty('book', testBook)
+        });
+
+        test('should return 400 if book does not exist', async () => {
+            const res = await request(app).put('/books/11111');
+            expect(res.status).toBe(400);
+        });
+    });
+    
+
+    describe('DELETE /books/:id', () => {
+        test('should delete a book', async () => {
+            const res = await request(app).delete(`/books/${isbn}`);
+            expect(res.status).toBe(200);
+        });
+
+        test('should return 404 if book does not exist', async () => {
+            const res = await request(app).delete('/books/11111');
+            expect(res.status).toBe(404);
+        });
+    });
+
 
     afterAll(async () => {
         await db.end();
